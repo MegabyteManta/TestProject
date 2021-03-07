@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "TestProjectCharacter.h"
+#include "SlimeCharacter.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -10,9 +10,9 @@
 #include "GameFramework/SpringArmComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
-// ATestProjectCharacter
+// ASlimeCharacter
 
-ATestProjectCharacter::ATestProjectCharacter()
+ASlimeCharacter::ASlimeCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -50,7 +50,7 @@ ATestProjectCharacter::ATestProjectCharacter()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void ATestProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
+void ASlimeCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
 	//Super::SetupPlayerInputComponent(PlayerInputComponent);
 	// Set up gameplay key bindings
@@ -58,27 +58,27 @@ void ATestProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &ATestProjectCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ATestProjectCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ASlimeCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ASlimeCharacter::MoveRight);
 
 	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
 	// "turn" handles devices that provide an absolute delta, such as a mouse.
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ATestProjectCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("TurnRate", this, &ASlimeCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ATestProjectCharacter::LookUpAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &ASlimeCharacter::LookUpAtRate);
 
 	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &ATestProjectCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &ATestProjectCharacter::TouchStopped);
+	PlayerInputComponent->BindTouch(IE_Pressed, this, &ASlimeCharacter::TouchStarted);
+	PlayerInputComponent->BindTouch(IE_Released, this, &ASlimeCharacter::TouchStopped);
 
 	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ATestProjectCharacter::OnResetVR);
+	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ASlimeCharacter::OnResetVR);
 }
 
 
-void ATestProjectCharacter::OnResetVR()
+void ASlimeCharacter::OnResetVR()
 {
 	// If TestProject is added to a project via 'Add Feature' in the Unreal Editor the dependency on HeadMountedDisplay in TestProject.Build.cs is not automatically propagated
 	// and a linker error will result.
@@ -89,32 +89,33 @@ void ATestProjectCharacter::OnResetVR()
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void ATestProjectCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+void ASlimeCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		Jump();
+	Jump();
 }
 
-void ATestProjectCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
+void ASlimeCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		StopJumping();
+	StopJumping();
 }
 
-void ATestProjectCharacter::TurnAtRate(float Rate)
+void ASlimeCharacter::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ATestProjectCharacter::LookUpAtRate(float Rate)
+void ASlimeCharacter::LookUpAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ATestProjectCharacter::MoveForward(float Value)
+void ASlimeCharacter::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
+		Jump();
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -125,17 +126,19 @@ void ATestProjectCharacter::MoveForward(float Value)
 	}
 }
 
-void ATestProjectCharacter::MoveRight(float Value)
+void ASlimeCharacter::MoveRight(float Value)
 {
-	if ( (Controller != nullptr) && (Value != 0.0f) )
+	if ((Controller != nullptr) && (Value != 0.0f))
 	{
+		Jump();
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-	
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
 	}
 }
+
