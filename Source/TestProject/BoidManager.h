@@ -65,6 +65,8 @@ public:
 		int SpawnCount = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoidSpawning")
 		float SpawnRadius = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "BoidSpawning")
+		AActor* Target;
 
 protected:
 	// Called when the game starts or when spawned

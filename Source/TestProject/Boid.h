@@ -22,6 +22,9 @@ class TESTPROJECT_API ABoid : public AActor
 	FVector CachedForward;
 	AActor* Target;
 
+	int count = 0;
+
+
 public:	
 	// Sets default values for this actor's properties
 	ABoid();

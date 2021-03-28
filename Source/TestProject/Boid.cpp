@@ -41,7 +41,7 @@ void ABoid::Initialize(FBoidSettings BoidSettings, AActor* BoidTarget) {
 
 void ABoid::UpdateBoid() {
 	Acceleration = FVector::ZeroVector;
-	UE_LOG(LogTemp, Warning, TEXT("ACCEL0: %s"), *Acceleration.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("ACCEL0: %s"), *Acceleration.ToString());
 
 	if (Target != nullptr) {
 		FVector OffsetToTarget = (Target->GetActorLocation() - Position);
@@ -75,10 +75,14 @@ void ABoid::UpdateBoid() {
 		FVector CollisionAvoidDir = ObstacleRays();
 		FVector CollisionAvoidForce = SteerTowards(CollisionAvoidDir) * Settings.AvoidCollisionWeight;
 		Acceleration += CollisionAvoidForce;
-		//UE_LOG(LogTemp, Warning, TEXT("ACCEL3: %s"), *Acceleration.ToString());
+		count++;
+		UE_LOG(LogTemp, Warning, TEXT("COLLIDING: %d"), count);
 
 	}
-
+	
+	
+	
+	
 	Velocity += Acceleration * DTime;
 	float Speed = Velocity.Size();
 	FVector Dir = Velocity / Speed;
@@ -87,10 +91,11 @@ void ABoid::UpdateBoid() {
 
 	CachedPosition += Velocity * DTime;
 	CachedForward = Dir;
-	Position = CachedPosition;
+	Position = FMath::VInterpTo(GetActorLocation(), CachedPosition, DTime, 1.f);
 	SetActorLocation(Position);
+	//CachedForward = Position;
 	Forward = CachedForward;
-	SetActorRotation(Forward.Rotation());
+	//SetActorRotation(Forward.Rotation());
 	//UE_LOG(LogTemp, Warning, TEXT("MOVING: %s"), *Position.ToString());
 	//UE_LOG(LogTemp, Warning, TEXT("VELOCITY: %s"), *Velocity.ToString());
 	//UE_LOG(LogTemp, Warning, TEXT("SPEED: %f"), Speed);
@@ -100,9 +105,10 @@ void ABoid::UpdateBoid() {
 bool ABoid::IsHeadingForCollision() {
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(Settings.BoundsRadius); // 5M Radius
 	FHitResult OutResult;
-	ECollisionChannel TraceChannel = ECC_Pawn;
+	ECollisionChannel TraceChannel = ECC_WorldStatic;
 	FVector SweepStart = GetActorLocation();
-	FVector SweepEnd = GetActorForwardVector()*Settings.CollisionAvoidDst; //THIS MIGHT BE WRONG
+	FVector SweepEnd = GetActorLocation() + GetActorForwardVector()*Settings.CollisionAvoidDst; //YOU PROBS NEED TO ADD THE ACTOR LOCAtION
+	FCollisionQueryParams CollisionQueryParams;
 	return GetWorld()->SweepSingleByChannel(OutResult, SweepStart, SweepEnd, FQuat::Identity, TraceChannel, Sphere);
 }
 
@@ -116,10 +122,12 @@ FVector ABoid::ObstacleRays() {
 		FHitResult OutResult;
 		ECollisionChannel TraceChannel = ECC_Pawn;
 		FVector SweepStart = GetActorLocation();
-		FVector SweepEnd = RayDirections[i] * Settings.CollisionAvoidDst; //THIS MIGHT BE WRONG
+		FVector SweepEnd = GetActorLocation() + RayDirections[i] * Settings.CollisionAvoidDst; //THIS MIGHT BE WRONG
+		
 		if (GetWorld()->SweepSingleByChannel(OutResult, SweepStart, SweepEnd, FQuat::Identity, TraceChannel, Sphere)) {
 			return RayDirections[i];
 		}
+		
 	}
 	return Forward;
 }
